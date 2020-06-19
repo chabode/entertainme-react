@@ -1,7 +1,7 @@
 const { MongoClient } = require('mongodb')
 
 const url = 'mongodb://localhost:27017'
-const dbName = 'prime_fox'
+const dbName = 'entertainMe'
 
 let db
 const client = new MongoClient(url, {useUnifiedTopology: true})

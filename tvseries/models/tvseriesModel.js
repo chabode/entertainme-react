@@ -1,8 +1,8 @@
 const { getDB } = require('../config/mongo')
-const { ObjectId, ObjectID} = require('mongodb')
+const { ObjectID } = require('mongodb')
 
 const db = getDB()
-db.createCollection('tvseries', {
+db.createCollection('TvSeries', {
     validator: {
         $jsonSchema: {
             bsonType: 'object',
@@ -25,14 +25,14 @@ db.createCollection('tvseries', {
                     description: 'must be double and is required'
                 },
                 tags: {
-                    bsonType: ['array', 'string'],
-                    description: 'must be string or an array of string and is required'
+                    bsonType: 'array',
+                    description: 'must be an array of string and is required'
                 }
             }
         }
     }
 })
-const tvSeries = db.collection('tvseries')
+const tvSeries = db.collection('TvSeries')
 
 class tvseriesModel {
     static showTvseries() {
@@ -40,7 +40,7 @@ class tvseriesModel {
     }
 
     static showOneTvseries(id) {
-        return tvSeries.findOne({ _id: ObjectId(id) })
+        return tvSeries.findOne({ _id: ObjectID(id) })
     }
 
     static addTvseries(tv) {
@@ -48,11 +48,21 @@ class tvseriesModel {
     }
 
     static updateTvseries(id, tv){
-        return tvSeries.updateOne({ _id : ObjectId(id)}, {$set : {title: tv.title, overview: tv.overview, poster_path: tv.poster_path, popularity: tv.popularity, tags: tv.tags}} )
+        return tvSeries.updateOne(
+            { _id : ObjectID(id)}, 
+            {$set : 
+                {   title: tv.title, 
+                    overview: tv.overview, 
+                    poster_path: tv.poster_path, 
+                    popularity: tv.popularity, 
+                    tags: tv.tags
+                }
+            }
+        )
     }
 
     static deleteTvseries(id){
-        return tvSeries.deleteOne({ _id: ObjectId(id)})
+        return tvSeries.deleteOne({ _id: ObjectID(id)})
     }
 }
 

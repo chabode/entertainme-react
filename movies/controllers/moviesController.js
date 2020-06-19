@@ -21,7 +21,8 @@ class moviesController {
 
     static async addMovie(req, res) {
         try {
-            const movie = await moviesModel.addMovie(req.body)
+            const {title, overview, poster_path, popularity, tags} = req.body
+            const movie = await moviesModel.addMovie({title, overview, poster_path, popularity, tags})
             return res.status(200).json(movie)
         } catch (error) {
             console.log(error)
@@ -31,7 +32,9 @@ class moviesController {
 
     static async updateMovie(req, res){
         try {
-            const movie = await moviesModel.updateMovie(req.params.movieId, req.body)
+            const {title, overview, poster_path, popularity, tags} = req.body
+            const {movieId} = req.params
+            const movie = await moviesModel.updateMovie(movieId, {title, overview, poster_path, popularity, tags})
             return res.status(200).json(movie)
         } catch (error) {
             console.log(error)
@@ -40,7 +43,8 @@ class moviesController {
 
     static async deleteMovie(req, res){
         try {
-            const movie = await moviesModel.deleteMovie(req.params.movieId)
+            const {movieId} = req.params
+            const movie = await moviesModel.deleteMovie(movieId)
             return res.status(200).json(movie)
         } catch (error) {
             console.log(error)

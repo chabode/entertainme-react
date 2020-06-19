@@ -21,16 +21,20 @@ class tvseriesController {
 
     static async addTvseries(req, res){
         try {
-            const tvseries = await tvseriesModel.addTvseries(req.body)
+            const {title, overview, poster_path, popularity, tags} = req.body
+            const tvseries = await tvseriesModel.addTvseries({title, overview, poster_path, popularity, tags})
             return res.status(200).json(tvseries)
         } catch (error) {
             console.log(error)
+            return res.status(400).json(error)
         }
     }
 
     static async updateTvseries(req, res){
         try {
-            const tvseries = await tvseriesModel.updateTvseries(req.params.tvId, req.body)
+            const {title, overview, poster_path, popularity, tags} = req.body
+            const {tvId} = req.params
+            const tvseries = await tvseriesModel.updateTvseries(tvId, {title, overview, poster_path, popularity, tags})
             return res.status(200).json(tvseries)
         } catch (error) {
             console.log(error)
@@ -39,7 +43,8 @@ class tvseriesController {
 
     static async deleteTvseries(req, res){
         try {
-            const tvseries = await tvseriesModel.deleteTvseries(req.params.tvId)
+            const {tvId} = req.params
+            const tvseries = await tvseriesModel.deleteTvseries(tvId)
             return res.status(200).json(tvseries)
         } catch (error) {
             console.log(error)
