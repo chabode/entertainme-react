@@ -46,9 +46,9 @@ class moviesController {
 
     static async editMovie(req, res){
         try {
-            const { movieId } = req.params
+            const { moviesId } = req.params
             const {title, overview, poster_path, popularity, tags} = req.body
-            const dataMovie = await axios.put(`http://localhost:3001/movies/${movieId}`, {
+            const dataMovie = await axios.put(`http://localhost:3001/movies/${moviesId}`, {
                 title, overview, poster_path, popularity, tags
             })
             await redis.del('moviesCache')
@@ -61,8 +61,8 @@ class moviesController {
 
     static async deleteMovie(req, res){
         try {
-            const {movieId} = req.params
-            const dataMovie = await axios.delete(`http://localhost:3001/movies/${movieId}`)
+            const {moviesId} = req.params
+            const dataMovie = await axios.delete(`http://localhost:3001/movies/${moviesId}`)
             await redis.del('moviesCache')
             await redis.del('entertainme')
             res.status(200).json(dataMovie.data)

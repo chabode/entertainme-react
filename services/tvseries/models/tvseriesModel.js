@@ -1,5 +1,5 @@
 const { getDB } = require('../config/mongo')
-const { ObjectID } = require('mongodb')
+const { ObjectId } = require('mongodb')
 
 const db = getDB()
 db.createCollection('TvSeries', {
@@ -40,7 +40,7 @@ class tvseriesModel {
     }
 
     static showOneTvseries(id) {
-        return tvSeries.findOne({ _id: ObjectID(id) })
+        return tvSeries.findOne({ _id: ObjectId(id) })
     }
 
     static addTvseries(tv) {
@@ -49,7 +49,7 @@ class tvseriesModel {
 
     static updateTvseries(id, tv){
         return tvSeries.updateOne(
-            { _id : ObjectID(id)}, 
+            { _id : ObjectId(id)}, 
             {$set : 
                 {   title: tv.title, 
                     overview: tv.overview, 
@@ -62,7 +62,7 @@ class tvseriesModel {
     }
 
     static deleteTvseries(id){
-        return tvSeries.deleteOne({ _id: ObjectID(id)})
+        return tvSeries.deleteOne({ _id: ObjectId(id)})
     }
 }
 
