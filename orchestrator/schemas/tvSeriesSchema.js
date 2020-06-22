@@ -1,6 +1,8 @@
-const { gql } = require('apollo-server')
+const { gql, RenameRootFields } = require('apollo-server')
 const axios = require('axios')
 const url = 'http://localhost:3002/tv_series'
+const Redis = require('ioredis')
+const redis = new Redis()
 
 const typeDefs = gql`
     type TvSeries {
@@ -27,8 +29,8 @@ const typeDefs = gql`
 
     extend type Mutation {
         addTvSeries(tvSeries: InputTvSeries): TvSeries
-        updateTvSeries(id: ID, update: InputTvSeries): TvSeries
-        deleteTvSeries(id: ID): TvSeries
+        updateTvSeries(id: ID, update: InputTvSeries): Message
+        deleteTvSeries(id: ID): Message
     }
 `
 
@@ -36,8 +38,16 @@ const resolvers = {
     Query: {
         tvSeries: async () => {
             try {
-                const tvSeries = await axios.get(url)
-                return tvSeries.data
+                const tvSeriesCache = await redis.get('tvSeriesCache')
+                if (tvSeriesCache){
+                    console.log('tv lewat redis cache')
+                    return JSON.parse(tvSeriesCache)
+                } else {
+                    console.log('tv lewat query')
+                    const tvSeries = await axios.get(url)
+                    await redis.set('tvSeriesCache', JSON.stringify(tvSeries.data))
+                    return tvSeries.data
+                }
             } catch(err) {
                 console.log(err)
             }
@@ -45,8 +55,16 @@ const resolvers = {
         getTvSeries: async (_, args) => {
             try {
                 const {id} = args
-                const tvSeries = await axios.get(`${url}/${id}`)
-                return tvSeries.data
+                const dataTv = await redis.get('tvSeriesCache')
+                if (dataTv) {
+                    console.log('tv lewat redis cache')
+                    let tvSeriesCache = JSON.parse(dataTv)
+                    return tvSeriesCache.filter(tv => tv._id == id)[0]
+                } else {
+                    console.log('tv lewat query')
+                    const tvSeries = await axios.get(`${url}/${id}`)
+                    return tvSeries.data
+                }
             } catch (err) {
                 console.log(err)
             }
@@ -57,7 +75,8 @@ const resolvers = {
             try {
                 const {tvSeries} = args
                 const newTvSeries = await axios.post(url, tvSeries)
-                return newTvSeries.data
+                await redis.del('tvSeriesCache')
+                return newTvSeries.data.ops[0]
             } catch (error) {
                 console.log(error)
             }
@@ -66,6 +85,7 @@ const resolvers = {
             try {
                 const {update, id} = args
                 const tvSeries = await axios.put(`${url}/${id}`, update)
+                await redis.del('tvSeriesCache')
                 return tvSeries.data
             } catch (error) {
                 console.log(error)
@@ -75,6 +95,7 @@ const resolvers = {
             try {
                 const { id } = args
                 const tvSeries = await axios.delete(`${url}/${id}`)
+                await redis.del('tvSeriesCache')
                 return tvSeries.data
             } catch (error) {
                 console.log(error)

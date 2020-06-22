@@ -7,6 +7,7 @@ class moviesController {
             return res.status(200).json(movies)
         } catch (error) {
             console.log(error)
+            return res.status(400).json(error)
         }
     }
 
@@ -16,6 +17,7 @@ class moviesController {
             return res.status(200).json(movie)
         } catch (error) {
             console.log(error)
+            return res.status(200).json(error)
         }
     }
 
@@ -35,9 +37,10 @@ class moviesController {
             const {title, overview, poster_path, popularity, tags} = req.body
             const {movieId} = req.params
             const movie = await moviesModel.updateMovie(movieId, {title, overview, poster_path, popularity, tags})
-            return res.status(200).json(movie)
+            return res.status(200).json({msg:`movies id ${movieId} has been updated`})
         } catch (error) {
             console.log(error)
+            return res.status(400).json(error)
         }
     }
 
@@ -45,9 +48,10 @@ class moviesController {
         try {
             const {movieId} = req.params
             const movie = await moviesModel.deleteMovie(movieId)
-            return res.status(200).json(movie)
+            return res.status(200).json({msg: `movies id ${movieId} has been deleted`})
         } catch (error) {
             console.log(error)
+            return res.status(400).json(error)
         }
     }
 }

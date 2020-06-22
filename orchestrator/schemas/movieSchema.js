@@ -1,6 +1,8 @@
 const { gql } = require('apollo-server')
 const axios = require('axios')
 const url = 'http://localhost:3001/movies'
+const Redis = require('ioredis')
+const redis = new Redis()
 
 const typeDefs = gql`
     type Movies {
@@ -10,6 +12,10 @@ const typeDefs = gql`
         poster_path: String
         popularity: Float
         tags: [String]
+    }
+
+    type Message {
+        msg: String
     }
 
     input InputMovie {
@@ -27,8 +33,8 @@ const typeDefs = gql`
 
     extend type Mutation {
         addMovie(movie: InputMovie): Movies
-        updateMovie(id: ID, update: InputMovie): Movies
-        deleteMovie(id: ID): Movies
+        updateMovie(id: ID, update: InputMovie): Message
+        deleteMovie(id: ID): Message
     }
 `
 
@@ -36,8 +42,16 @@ const resolvers = {
     Query: {
         movies: async () => {
             try {
-                const movies = await axios.get(url)
-                return movies.data
+                const movieCache = await redis.get('moviesCache')
+                if (movieCache){
+                    console.log('movie lewat redis cache')
+                    return JSON.parse(movieCache)
+                } else {
+                    console.log('movie lewat query')
+                    const movies = await axios.get(url)
+                    await redis.set('moviesCache', JSON.stringify(movies.data))
+                    return movies.data
+                }
             } catch(err) {
                 console.log(err)
             }
@@ -45,8 +59,16 @@ const resolvers = {
         getMovie: async (_, args) => {
             try {
                 const { id } = args
-                const movie = await axios.get(`${url}/${id}`)
-                return movie.data
+                const dataMovie = await redis.get('moviesCache')
+                if(dataMovie) {
+                    console.log('movie lewat redis cache')
+                    let movieCache = JSON.parse(dataMovie)
+                    return movieCache.filter(movie => movie._id == id)[0]
+                } else {
+                    console.log('movie lewat query')
+                    const movie = await axios.get(`${url}/${id}`)
+                    return movie.data
+                }
             } catch (err) {
                 console.log(err)
             }
@@ -57,7 +79,9 @@ const resolvers = {
             try {
                 const {movie} = args
                 const newMovie = await axios.post(url, movie)
-                return newMovie.data
+                await redis.del('moviesCache')
+                console.log(newMovie.data)
+                return newMovie.data.ops[0]
             } catch (error) {
                 console.log(error)
             }
@@ -66,6 +90,8 @@ const resolvers = {
             try {
                 const {update, id} = args
                 const movie = await axios.put(`${url}/${id}`, update)
+                await redis.del('moviesCache')
+                console.log(movie.data)
                 return movie.data
             } catch (error) {
                 console.log(error)
@@ -75,6 +101,8 @@ const resolvers = {
             try {
                 const { id } = args
                 const movie = await axios.delete(`${url}/${id}`)
+                await redis.del('moviesCache')
+                console.log(movie.data)
                 return movie.data
             } catch (error) {
                 console.log(error)
